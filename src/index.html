@@ -310,13 +310,22 @@
                 cartItems.innerHTML = 'Cart is empty';
             } else {
                 let cartHTML = '';
-                cart.forEach(item => {
-                    cartHTML += `<div>${item.name} - $${item.price.toFixed(2)}</div>`;
+                cart.forEach((item, index) => {
+                    cartHTML += `<div class="cart-item">${item.name} - $${item.price.toFixed(2)} <button class=\"remove-from-cart\" onclick=\"removeFromCart(${index})\">Remove</button></div>`;
                 });
                 cartItems.innerHTML = cartHTML;
             }
             
             cartTotal.textContent = total.toFixed(2);
+        }
+        
+        function removeFromCart(index) {
+            if (index >= 0 && index < cart.length) {
+                total -= cart[index].price;
+                cart.splice(index, 1);
+                if (total < 0) total = 0;
+                updateCartDisplay();
+            }
         }
         
         function processCheckout(event) {

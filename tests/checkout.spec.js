@@ -29,6 +29,24 @@ test.describe('E-Commerce Checkout Flow', () => {
     await expect(page.locator('#cart-total')).toContainText('79.98');
   });
 
+  test('should remove product from cart and update total', async ({ page }) => {
+    // Add two products
+    await page.click('text=Add to Cart >> nth=0');
+    await page.click('text=Add to Cart >> nth=1');
+
+    // Ensure both present and total matches
+    await expect(page.locator('#cart-items')).toContainText('Product 1');
+    await expect(page.locator('#cart-items')).toContainText('Product 2');
+    await expect(page.locator('#cart-total')).toContainText('79.98');
+
+    // Click first remove button
+    await page.click('.cart-item .remove-from-cart >> nth=0');
+
+    // Now Product 1 should be removed, total should be 49.99
+    await expect(page.locator('#cart-items')).not.toContainText('Product 1');
+    await expect(page.locator('#cart-total')).toContainText('49.99');
+  });
+
   test('should complete checkout process', async ({ page }) => {
     // Add a product to cart
     await page.click('text=Add to Cart >> nth=0');
