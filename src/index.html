@@ -131,6 +131,56 @@
             font-weight: bold;
             color: #764ba2;
         }
+
+        .order-summary {
+            margin-top: 15px;
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .order-summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+        }
+
+        .order-summary-row.total {
+            font-weight: 700;
+            color: #2e7d32;
+        }
+
+        .cart-tools {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .cart-tools .field {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .cart-tools label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .remove-item {
+            margin-left: 8px;
+            background: transparent;
+            color: #d32f2f;
+            border: 1px solid #f0b3b3;
+            border-radius: 4px;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
         
         .checkout-form {
             margin-top: 30px;
@@ -256,11 +306,38 @@
                 <div id="cart-items">Cart is empty</div>
                 <div>Total: $<span id="cart-total">0.00</span></div>
                 <div id="free-shipping-msg" style="margin-top: 8px; color: #333;"></div>
+
+                <div class="cart-tools">
+                    <div class="field">
+                        <label for="coupon-code">Coupon</label>
+                        <div style="display:flex; gap:8px;">
+                            <input id="coupon-code" placeholder="Enter code e.g. SAVE10" style="flex:1; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                            <button id="apply-coupon" type="button" class="add-to-cart" style="width:auto; padding:8px 12px;" onclick="applyCoupon()">Apply</button>
+                        </div>
+                        <div id="coupon-status" style="margin-top:6px; font-size:12px; color:#555;"></div>
+                    </div>
+                    <div class="field">
+                        <label for="shipping-method">Shipping Method</label>
+                        <select id="shipping-method" onchange="onShippingChange(this.value)" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                            <option value="0">Pickup - $0.00</option>
+                            <option value="5">Standard - $5.00</option>
+                            <option value="15">Express - $15.00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="order-summary" aria-label="Order Summary">
+                    <div class="order-summary-row"><span>Subtotal</span><span>$<span id="summary-subtotal">0.00</span></span></div>
+                    <div class="order-summary-row"><span>Discount</span><span>-$<span id="summary-discount">0.00</span></span></div>
+                    <div class="order-summary-row"><span>Shipping</span><span>$<span id="summary-shipping">0.00</span></span></div>
+                    <div class="order-summary-row"><span>Tax</span><span>$<span id="summary-tax">0.00</span></span></div>
+                    <div class="order-summary-row total"><span>Grand Total</span><span>$<span id="summary-grand-total">0.00</span></span></div>
+                </div>
             </div>
             
             <div class="checkout-form">
                 <h2>Checkout</h2>
-                <form id="checkout-form" onsubmit="return processCheckout(event)">
+                <form id="checkout-form" novalidate onsubmit="return processCheckout(event)">
                     <div class="form-group">
                         <label for="name">Full Name</label>
                         <input type="text" id="name" name="name" required>
@@ -296,7 +373,10 @@
     <script>
         let cart = [];
         let total = 0;
+        let discountRate = 0; // 0..1
+        let shippingCost = 0; // dollars
         const FREE_SHIPPING_THRESHOLD = 50;
+        const TAX_RATE = 0.10;
         
         function addToCart(productName, price) {
             cart.push({ name: productName, price: price });
@@ -308,13 +388,18 @@
             const cartItems = document.getElementById('cart-items');
             const cartTotal = document.getElementById('cart-total');
             const freeMsg = document.getElementById('free-shipping-msg');
+            const sSubtotal = document.getElementById('summary-subtotal');
+            const sDiscount = document.getElementById('summary-discount');
+            const sShipping = document.getElementById('summary-shipping');
+            const sTax = document.getElementById('summary-tax');
+            const sGrand = document.getElementById('summary-grand-total');
             
             if (cart.length === 0) {
                 cartItems.innerHTML = 'Cart is empty';
             } else {
                 let cartHTML = '';
-                cart.forEach(item => {
-                    cartHTML += `<div>${item.name} - $${item.price.toFixed(2)}</div>`;
+                cart.forEach((item, index) => {
+                    cartHTML += `<div>${item.name} - $${item.price.toFixed(2)} <button class="remove-item" onclick="removeFromCart(${index})" type="button">Remove</button></div>`;
                 });
                 cartItems.innerHTML = cartHTML;
             }
@@ -331,6 +416,62 @@
                     freeMsg.style.color = '#2e7d32';
                 }
             }
+
+            // Summary calculations (INTENTIONAL IMPERFECTIONS):
+            // - Discount applies to (subtotal + shipping) instead of only subtotal
+            // - Tax calculated on subtotal BEFORE discount
+            const subtotal = total;
+            const discountAmount = (subtotal + shippingCost) * discountRate; // intentional
+            const tax = subtotal * TAX_RATE; // intentional
+            const grand = Math.max(0, subtotal - discountAmount + shippingCost + tax);
+
+            if (sSubtotal) sSubtotal.textContent = subtotal.toFixed(2);
+            if (sDiscount) sDiscount.textContent = discountAmount.toFixed(2);
+            if (sShipping) sShipping.textContent = shippingCost.toFixed(2);
+            if (sTax) sTax.textContent = tax.toFixed(2);
+            if (sGrand) sGrand.textContent = grand.toFixed(2);
+
+            // persist
+            try {
+                localStorage.setItem('cart', JSON.stringify(cart));
+                localStorage.setItem('total', String(total));
+                localStorage.setItem('discountRate', String(discountRate));
+                localStorage.setItem('shippingCost', String(shippingCost));
+            } catch (_) {}
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            total = cart.reduce((sum, item) => sum + item.price, 0);
+            updateCartDisplay();
+        }
+
+        function applyCoupon() {
+            const input = document.getElementById('coupon-code');
+            const status = document.getElementById('coupon-status');
+            const code = (input.value || '').trim().toUpperCase();
+            if (code === 'SAVE10') {
+                discountRate = 0.10;
+                if (status) status.textContent = 'Coupon applied: 10% off';
+                if (status) status.style.color = '#2e7d32';
+            } else if (code === 'FREESHIP') {
+                shippingCost = 0;
+                if (status) status.textContent = 'Free shipping applied';
+                if (status) status.style.color = '#2e7d32';
+                const select = document.getElementById('shipping-method');
+                if (select) select.value = '0';
+            } else {
+                discountRate = 0;
+                if (status) status.textContent = 'Invalid coupon';
+                if (status) status.style.color = '#d32f2f';
+            }
+            updateCartDisplay();
+        }
+
+        function onShippingChange(value) {
+            const v = parseFloat(value);
+            shippingCost = isNaN(v) ? 0 : v;
+            updateCartDisplay();
         }
         
         function processCheckout(event) {
@@ -347,6 +488,10 @@
             document.getElementById('checkout-form').reset();
             cart = [];
             total = 0;
+            discountRate = 0;
+            shippingCost = 0;
+            const select = document.getElementById('shipping-method');
+            if (select) select.value = '0';
             updateCartDisplay();
             
             // Scroll to success message
@@ -354,6 +499,22 @@
             
             return false;
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const savedTotal = parseFloat(localStorage.getItem('total') || '0');
+                const savedDiscount = parseFloat(localStorage.getItem('discountRate') || '0');
+                const savedShipping = parseFloat(localStorage.getItem('shippingCost') || '0');
+                if (Array.isArray(savedCart)) cart = savedCart;
+                if (!isNaN(savedTotal)) total = savedTotal;
+                if (!isNaN(savedDiscount)) discountRate = savedDiscount;
+                if (!isNaN(savedShipping)) shippingCost = savedShipping;
+                const select = document.getElementById('shipping-method');
+                if (select) select.value = String(shippingCost);
+            } catch (_) {}
+            updateCartDisplay();
+        });
     </script>
 </body>
 </html>

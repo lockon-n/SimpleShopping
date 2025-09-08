@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../src/node_modules/@playwright/test');
 
 test.describe('E-Commerce Checkout Flow', () => {
   const baseURL = process.env.APP_URL || 'http://localhost:30123';
@@ -93,6 +93,47 @@ test.describe('E-Commerce Checkout Flow', () => {
     // Test tablet viewport
     await page.setViewportSize({ width: 768, height: 1024 });
     await expect(page.locator('.product-list')).toBeVisible();
+  });
+
+  test('should remove items from cart', async ({ page }) => {
+    // Add two products
+    await page.click('text=Add to Cart >> nth=0');
+    await page.click('text=Add to Cart >> nth=1');
+
+    // Verify both are present
+    await expect(page.locator('#cart-items')).toContainText('Product 1');
+    await expect(page.locator('#cart-items')).toContainText('Product 2');
+
+    // Remove first item
+    await page.click('text=Remove >> nth=0');
+
+    // Verify Product 1 removed and total updated
+    await expect(page.locator('#cart-items')).not.toContainText('Product 1');
+    await expect(page.locator('#cart-items')).toContainText('Product 2');
+    await expect(page.locator('#cart-total')).toContainText('49.99');
+  });
+
+  test('should apply SAVE10 coupon and update discount summary', async ({ page }) => {
+    await page.click('text=Add to Cart >> nth=0'); // $29.99
+    await page.fill('#coupon-code', 'SAVE10');
+    await page.click('#apply-coupon');
+
+    await expect(page.locator('#coupon-status')).toContainText('Coupon applied');
+    await expect(page.locator('#summary-discount')).toContainText('3.00');
+  });
+
+  test('should calculate tax after discount (business rule)', async ({ page }) => {
+    // Subtotal = 49.99 + 39.99 = 89.98
+    await page.click('text=Add to Cart >> nth=1');
+    await page.click('text=Add to Cart >> nth=2');
+
+    // Apply 10% discount -> expected discount = 9.00; expected taxable = 80.98
+    await page.fill('#coupon-code', 'SAVE10');
+    await page.click('#apply-coupon');
+
+    // Expect tax to be computed after discount -> 10% of 80.98 = 8.10
+    // This is intentionally expected to fail due to current implementation
+    await expect(page.locator('#summary-tax')).toContainText('8.10');
   });
 
   test('performance: should load quickly', async ({ page }) => {

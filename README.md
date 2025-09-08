@@ -25,15 +25,6 @@ This application is deployed as a preview environment for PR #123 testing.
 - **Environment**: Preview
 - **Namespace**: pr-preview-123
 
-## Testing
-
-The application includes Playwright E2E tests located in the tests directory.
-
-To run tests:
-```bash
-npm test
-```
-
 ## Build
 
 This is a static HTML application that can be served by any web server (nginx, apache, etc.)
