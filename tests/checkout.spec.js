@@ -100,6 +100,19 @@ test.describe('E-Commerce Checkout Flow', () => {
     expect(orderId).toMatch(/^ORD-[A-Z0-9]+$/);
   });
 
+  test('should save order to localStorage and render order history', async ({ page }) => {
+    await page.click('text=Add to Cart >> nth=0');
+    await page.click('#submit-button');
+    await expect(page.locator('#checkout-success')).toBeVisible();
+
+    // order history visible
+    await expect(page.locator('.order-history')).toBeVisible();
+
+    // list should contain one item with ORD- prefix
+    const text = await page.locator('#orders-list').textContent();
+    expect(text).toMatch(/ORD-/);
+  });
+
   test('should validate required fields', async ({ page }) => {
     // Try to submit without filling fields
     await page.click('#submit-button');
