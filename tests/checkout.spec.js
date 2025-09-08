@@ -29,6 +29,23 @@ test.describe('E-Commerce Checkout Flow', () => {
     await expect(page.locator('#cart-total')).toContainText('79.98');
   });
 
+  test('should apply SAVE10 coupon to reduce total by 10%', async ({ page }) => {
+    // Add two products: 29.99 + 49.99 = 79.98
+    await page.click('text=Add to Cart >> nth=0');
+    await page.click('text=Add to Cart >> nth=1');
+
+    // Subtotal should be 79.98
+    await expect(page.locator('#cart-subtotal')).toContainText('79.98');
+
+    // Apply coupon
+    await page.fill('#coupon', 'SAVE10');
+    await page.click('#apply-coupon');
+
+    // Discount 7.998 -> 8.00, final total 71.98
+    await expect(page.locator('#cart-discount')).toContainText('8.00');
+    await expect(page.locator('#cart-total')).toContainText('71.98');
+  });
+
   test('should change quantity and update totals', async ({ page }) => {
     await page.click('text=Add to Cart >> nth=0');
     await page.click('text=Add to Cart >> nth=0');
