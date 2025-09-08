@@ -29,6 +29,19 @@ test.describe('E-Commerce Checkout Flow', () => {
     await expect(page.locator('#cart-total')).toContainText('79.98');
   });
 
+  test('should show free shipping threshold message and qualify when enough', async ({ page }) => {
+    // Initially, total is 0 so remaining should be 50.00
+    await expect(page.locator('#free-shipping-msg')).toContainText('Add $50.00 to get free shipping');
+
+    // Add Product 1 ($29.99) => remaining 20.01
+    await page.click('text=Add to Cart >> nth=0');
+    await expect(page.locator('#free-shipping-msg')).toContainText('Add $20.01');
+
+    // Add Product 3 ($39.99) => total 69.98 => qualify
+    await page.click('text=Add to Cart >> nth=2');
+    await expect(page.locator('#free-shipping-msg')).toContainText('qualify for free shipping');
+  });
+
   test('should complete checkout process', async ({ page }) => {
     // Add a product to cart
     await page.click('text=Add to Cart >> nth=0');

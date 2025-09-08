@@ -255,6 +255,7 @@
                 <h2>Shopping Cart</h2>
                 <div id="cart-items">Cart is empty</div>
                 <div>Total: $<span id="cart-total">0.00</span></div>
+                <div id="free-shipping-msg" style="margin-top: 8px; color: #333;"></div>
             </div>
             
             <div class="checkout-form">
@@ -295,6 +296,7 @@
     <script>
         let cart = [];
         let total = 0;
+        const FREE_SHIPPING_THRESHOLD = 50;
         
         function addToCart(productName, price) {
             cart.push({ name: productName, price: price });
@@ -305,6 +307,7 @@
         function updateCartDisplay() {
             const cartItems = document.getElementById('cart-items');
             const cartTotal = document.getElementById('cart-total');
+            const freeMsg = document.getElementById('free-shipping-msg');
             
             if (cart.length === 0) {
                 cartItems.innerHTML = 'Cart is empty';
@@ -317,6 +320,17 @@
             }
             
             cartTotal.textContent = total.toFixed(2);
+
+            if (freeMsg) {
+                const remaining = FREE_SHIPPING_THRESHOLD - total;
+                if (remaining > 0) {
+                    freeMsg.textContent = `Add $${remaining.toFixed(2)} to get free shipping`;
+                    freeMsg.style.color = '#a15c2f';
+                } else {
+                    freeMsg.textContent = 'You qualify for free shipping!';
+                    freeMsg.style.color = '#2e7d32';
+                }
+            }
         }
         
         function processCheckout(event) {
