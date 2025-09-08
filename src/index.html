@@ -18,6 +18,18 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
+
+        body.dark {
+            color: #e0e0e0;
+            background: #121212;
+        }
+        body.dark h1 { color: #e0e0e0; }
+        body.dark .main-content { background: #1e1e1e; }
+        body.dark .product { border-color: #333; }
+        body.dark .cart-section { background: #1a1a1a; }
+        body.dark .checkout-form { background: #1a1a1a; }
+        body.dark .add-to-cart { background: #333; }
+        body.dark .add-to-cart:hover { background: #444; }
         
         .container {
             max-width: 1200px;
@@ -224,6 +236,9 @@
             </div>
             <span>PR #123</span>
         </div>
+        <div style="margin: 10px 0; text-align: right;">
+            <button id="toggle-theme" onclick="toggleTheme()">Switch to Dark Mode</button>
+        </div>
         
         <h1>Frontend App - E-Commerce Demo</h1>
         
@@ -303,6 +318,7 @@
         let cart = [];
         let total = 0;
         let appliedCoupon = '';
+        let theme = 'light';
         
         function addToCart(productName, price) {
             const existingIndex = cart.findIndex(item => item.name === productName);
@@ -404,6 +420,21 @@
             document.getElementById('checkout-success').scrollIntoView({ behavior: 'smooth' });
             
             return false;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            if (theme === 'light') {
+                body.classList.add('dark');
+                theme = 'dark';
+                const btn = document.getElementById('toggle-theme');
+                if (btn) btn.textContent = 'Switch to Light Mode';
+            } else {
+                body.classList.remove('dark');
+                theme = 'light';
+                const btn = document.getElementById('toggle-theme');
+                if (btn) btn.textContent = 'Switch to Dark Mode';
+            }
         }
     </script>
 </body>

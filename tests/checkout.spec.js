@@ -118,6 +118,24 @@ test.describe('E-Commerce Checkout Flow', () => {
     await expect(prInfo).toContainText('feature/pr-123');
   });
 
+  test('should toggle dark mode and update button label', async ({ page }) => {
+    const btn = page.locator('#toggle-theme');
+    await expect(btn).toBeVisible();
+    await expect(btn).toContainText('Switch to Dark Mode');
+
+    await btn.click();
+    await expect(btn).toContainText('Switch to Light Mode');
+
+    // body should have class 'dark'
+    const hasDark = await page.evaluate(() => document.body.classList.contains('dark'));
+    expect(hasDark).toBeTruthy();
+
+    // toggle back
+    await btn.click();
+    const hasDark2 = await page.evaluate(() => document.body.classList.contains('dark'));
+    expect(hasDark2).toBeFalsy();
+  });
+
   test('should have responsive design', async ({ page }) => {
     // Test mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
