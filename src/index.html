@@ -297,7 +297,12 @@
         let total = 0;
         
         function addToCart(productName, price) {
-            cart.push({ name: productName, price: price });
+            const existingIndex = cart.findIndex(item => item.name === productName);
+            if (existingIndex !== -1) {
+                cart[existingIndex].quantity += 1;
+            } else {
+                cart.push({ name: productName, price: price, quantity: 1 });
+            }
             total += price;
             updateCartDisplay();
         }
@@ -311,7 +316,8 @@
             } else {
                 let cartHTML = '';
                 cart.forEach((item, index) => {
-                    cartHTML += `<div class="cart-item">${item.name} - $${item.price.toFixed(2)} <button class=\"remove-from-cart\" onclick=\"removeFromCart(${index})\">Remove</button></div>`;
+                    const lineTotal = item.price * item.quantity;
+                    cartHTML += `<div class="cart-item">${item.name} x <span class=\"qty\">${item.quantity}</span> - $${lineTotal.toFixed(2)} <button class=\"decrease-qty\" onclick=\"changeQuantity(${index}, -1)\">-</button> <button class=\"increase-qty\" onclick=\"changeQuantity(${index}, 1)\">+</button> <button class=\"remove-from-cart\" onclick=\"removeFromCart(${index})\">Remove</button></div>`;
                 });
                 cartItems.innerHTML = cartHTML;
             }
@@ -321,8 +327,24 @@
         
         function removeFromCart(index) {
             if (index >= 0 && index < cart.length) {
-                total -= cart[index].price;
+                total -= cart[index].price * (cart[index].quantity || 1);
                 cart.splice(index, 1);
+                if (total < 0) total = 0;
+                updateCartDisplay();
+            }
+        }
+
+        function changeQuantity(index, delta) {
+            if (index >= 0 && index < cart.length) {
+                const item = cart[index];
+                const newQty = (item.quantity || 1) + delta;
+                if (newQty <= 0) {
+                    total -= item.price * (item.quantity || 1);
+                    cart.splice(index, 1);
+                } else {
+                    item.quantity = newQty;
+                    total += item.price * delta;
+                }
                 if (total < 0) total = 0;
                 updateCartDisplay();
             }
