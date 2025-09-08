@@ -284,22 +284,24 @@
                 <form id="checkout-form" onsubmit="return processCheckout(event)">
                     <div class="form-group">
                         <label for="name">Full Name</label>
-                        <input type="text" id="name" name="name" required>
+                        <input type="text" id="name" name="name" required minlength="2">
                     </div>
                     
                     <div class="form-group">
                         <label for="email">Email</label>
                         <input type="email" id="email" name="email" required>
+                        <div id="email-error" style="color: #b00020; display: none; font-size: 14px;">Please enter a valid email address</div>
                     </div>
                     
                     <div class="form-group">
                         <label for="address">Shipping Address</label>
-                        <input type="text" id="address" name="address" required>
+                        <input type="text" id="address" name="address" required minlength="5">
                     </div>
                     
                     <div class="form-group">
                         <label for="card">Credit Card Number</label>
                         <input type="text" id="card" name="card" pattern="[0-9]{16}" required>
+                        <div id="card-error" style="color: #b00020; display: none; font-size: 14px;">Card must be 16 digits</div>
                     </div>
                     
                     <button type="submit" id="submit-button">Complete Order</button>
@@ -406,8 +408,35 @@
             }
         }
         
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
         function processCheckout(event) {
             event.preventDefault();
+            const emailEl = document.getElementById('email');
+            const emailErrEl = document.getElementById('email-error');
+            const cardEl = document.getElementById('card');
+            const cardErrEl = document.getElementById('card-error');
+
+            let hasError = false;
+            if (emailEl && !isValidEmail(emailEl.value)) {
+                hasError = true;
+                if (emailErrEl) emailErrEl.style.display = 'block';
+            } else if (emailErrEl) {
+                emailErrEl.style.display = 'none';
+            }
+
+            if (cardEl && !/^\d{16}$/.test(cardEl.value)) {
+                hasError = true;
+                if (cardErrEl) cardErrEl.style.display = 'block';
+            } else if (cardErrEl) {
+                cardErrEl.style.display = 'none';
+            }
+
+            if (hasError) {
+                return false;
+            }
             
             // Generate order ID
             const orderId = 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();

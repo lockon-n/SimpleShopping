@@ -114,13 +114,15 @@ test.describe('E-Commerce Checkout Flow', () => {
   });
 
   test('should validate required fields', async ({ page }) => {
-    // Try to submit without filling fields
+    // invalid email and card should show custom errors
+    await page.fill('#name', 'J');
+    await page.fill('#email', 'not-an-email');
+    await page.fill('#address', '123');
+    await page.fill('#card', '123');
     await page.click('#submit-button');
-    
-    // Check HTML5 validation (form should not submit)
-    const nameInput = page.locator('#name');
-    const validationMessage = await nameInput.evaluate(el => el.validationMessage);
-    expect(validationMessage).toBeTruthy();
+
+    await expect(page.locator('#email-error')).toBeVisible();
+    await expect(page.locator('#card-error')).toBeVisible();
   });
 
   test('should display PR information', async ({ page }) => {
