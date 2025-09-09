@@ -132,7 +132,6 @@ test.describe('E-Commerce Checkout Flow', () => {
     await page.click('#apply-coupon');
 
     // Expect tax to be computed after discount -> 10% of 80.98 = 8.10
-    // This is intentionally expected to fail due to current implementation
     await expect(page.locator('#summary-tax')).toContainText('8.10');
   });
 

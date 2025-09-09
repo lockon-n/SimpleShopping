@@ -417,9 +417,6 @@
                 }
             }
 
-            // Summary calculations (INTENTIONAL IMPERFECTIONS):
-            // - Discount applies to (subtotal + shipping) instead of only subtotal
-            // - Tax calculated on subtotal BEFORE discount
             const subtotal = total;
             const discountAmount = (subtotal + shippingCost) * discountRate; // intentional
             const tax = subtotal * TAX_RATE; // intentional
