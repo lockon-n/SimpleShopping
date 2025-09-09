@@ -1,5 +1,7 @@
 # Test Results Report
 
+*Strict Note: you only need to fill the cells with ✅ or ❌ and edit the number of passed/failed tests, do not change, add or delete any other contents of this report!
+
 ## E-Commerce Checkout Flow
 
 | Test Name | Result |
